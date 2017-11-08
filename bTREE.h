@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
-using namespace std;
+using std::string;
+#include <iostream>
+using std::cout;
 
 class bTREE
 {
@@ -16,6 +18,11 @@ private:
     treeNode* head;
     bool find(string val, treeNode* tree_);
     int numberOfNodes(treeNode* tree_);
+	string locate(string val, treeNode* tree_);
+	string findShortestPath(treeNode* tree_);
+	bool insert(string val, int time, treeNode* tree_);
+	void inorder(treeNode* tree_);
+	void display(treeNode* tree_);
 
 public:
     bTREE();
@@ -24,17 +31,21 @@ public:
     int dataInserted();
     int numberOfNodes();
 
-    bool insert(string, int);
+    bool insert(string val, int time);
 
     bool find(string val);
 
-    string locate(string);
+	void inorder();
 
+    string locate(string val);
 
+	string findShortestPath();
+
+	/*
     friend bool operator==(const bTREE& lhs, const bTREE& rhs);
     friend bool operator!=(const bTREE& lhs, const bTREE& rhs);
 
     friend std::ostream& operator<<(std::ostream& out, const bTREE& p);
-
+	*/
 };
 
