@@ -3,6 +3,8 @@
 using std::string;
 #include <iostream>
 using std::cout;
+#include<vector>
+using std::vector;
 
 class bTREE
 {
@@ -20,9 +22,14 @@ private:
     int numberOfNodes(treeNode* tree_);
 	string locate(string val, treeNode* tree_);
 	string findShortestPath(treeNode* tree_);
-	bool insert(string val, int time, treeNode* tree_);
-	void inorder(treeNode* tree_);
-	void display(treeNode* tree_);
+	bool insert(string val, int time, treeNode* &tree_);
+	void inorder(vector<string> &traversal, treeNode* tree_);
+
+	static void displayRight(std::ostream & outfile,
+		treeNode * subtree, std::string prefix);
+
+	static void displayLeft(std::ostream & outfile,
+		treeNode * subtree, std::string prefix);
 
 public:
     bTREE();
@@ -40,6 +47,9 @@ public:
     string locate(string val);
 
 	string findShortestPath();
+
+	void display(std::ostream& outfile) const;
+
 
 	/*
     friend bool operator==(const bTREE& lhs, const bTREE& rhs);

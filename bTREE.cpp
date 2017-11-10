@@ -4,25 +4,26 @@
 //look at descriptions in pMT.h for guidance on what you might need for these function to actually do
 bTREE::bTREE()
 {
-	head = new treeNode;
-	head->left_ = nullptr;
-	head->right_ = nullptr;
+	head = nullptr;
 }
 
 bTREE::~bTREE()
 {
 }
 
+// DON'T UNDERSTAND THIS ONE YET
 int bTREE::dataInserted()
 {
 	return -1;
 }
 
+//returns size of the tree
 int bTREE::numberOfNodes()
 {
     return numberOfNodes(head);
 }
 
+//returns size of the tree
 int bTREE::numberOfNodes(treeNode* tree_)
 {
     if(tree_ == nullptr)
@@ -50,6 +51,8 @@ int bTREE::numberOfNodes(treeNode* tree_)
     }
 }
 
+// returns the location of the data as a string of binary digits
+// using the convention described in findShortestPath()
 string bTREE::locate(string val, treeNode * tree_)
 {
 	if (tree_->data == val) //If this is the data node, end recursion.
@@ -70,21 +73,29 @@ string bTREE::locate(string val, treeNode * tree_)
 	}									  // but we're assuming the user knows that what they are looking for exists.
 }
 
+/*
+Returns the shortest path as a string of 0s and 1s. 
+0  represents "go left" and 1 represents "go right" like
+a text compression document.
+*/
 string bTREE::findShortestPath(treeNode * tree_)
 {
+	// a comparison must be made since there are multiple branches.
 	string left;
 	string right;
+
+	//If the tree is empty.
 	if (tree_ == nullptr)
 	{
 		return "";
 	}
-	else if (tree_->right_ != nullptr)
+	else if (tree_->left_ != nullptr) // if left has content.
 	{
-		if (tree_->left_ != nullptr)
+		if (tree_->right_ != nullptr) // and right has content.
 		{
-			left = ('0' + findShortestPath(tree_->left_));
-			right = ('1' + findShortestPath(tree_->right_));
-			if (left.size() > right.size())
+			left = ('0' + findShortestPath(tree_->left_)); // assume we go left, then find the path from there.
+			right = ('1' + findShortestPath(tree_->right_)); // assumer we go right, then find the path from there.
+			if (left.size() > right.size()) // since every bit represents a step, the path with the fewest steps is the shortest.
 			{
 				return right;
 			}
@@ -93,18 +104,21 @@ string bTREE::findShortestPath(treeNode * tree_)
 				return left;
 			}
 		}
-		else
+		else // if left has content but right does not.
 		{
-			return "0";
+			return "1"; //go right
 		}
 	}
-	else
+	else //if left has no content end recursion and go here
 	{
-		return "1";
+		return "0"; // this ensures that left fills before right.
 	}
 }
 
-bool bTREE::insert(string val, int time, treeNode * tree_)
+// Inserts Node at the location of the shortest path.
+// fills every level before moving to the next.
+// Preference for left nodes before right.
+bool bTREE::insert(string val, int time, treeNode* &tree_)
 {
 	treeNode* insertion = new treeNode;
 	insertion->data = val;
@@ -112,28 +126,33 @@ bool bTREE::insert(string val, int time, treeNode * tree_)
 	insertion->left_ = nullptr;
 	insertion->right_ = nullptr;
 
+	// If head is null.
 	if (tree_ == nullptr)
 	{
 		tree_ = insertion;
 		return true;
 	}
 
+	// parent will move to the location of the parent node which will recieve the child.
 	treeNode* parent = tree_;
 
+	// assigns a binary string to at.
 	string at = findShortestPath();
 
-	for (int i = 0; i < (at.size() - 1); i++)
+	for (int i = 0; i < (at.size() - 1); i++) // move parent throught the tree to the location of the opening
 	{
-		if (at[i] == '0')
+		if (at[i] == '0') // go left
 		{
 			parent = parent->left_;
 		}
-		else if (at[i] == '1')
+		else if (at[i] == '1') // go right
 		{
 			parent = parent->right_;
 		}
 	}
 
+	// parent is in position.
+	// now decides if it should add to the right branch or the left branch.
 	if (at[at.size() - 1] == '0')
 	{
 		parent->left_ = insertion;
@@ -145,68 +164,126 @@ bool bTREE::insert(string val, int time, treeNode * tree_)
 	return true;
 }
 
-void bTREE::inorder(treeNode * tree_)
+// inorder traversal of the tree.
+void bTREE::inorder(vector<string>& traversal, treeNode * tree_)
 {
 	if (tree_ != nullptr)
 	{
-		inorder(tree_->left_);
-		display(tree_->right_);
-		inorder(tree_->left_);
+		inorder(traversal, tree_->left_);
+		traversal.push_back(tree_->data);
+		inorder(traversal, tree_->right_);
 	}
 }
 
-void bTREE::display(treeNode * tree_)
+// Display functions modified from "BinaryTree.h" by Tom Bailey.
+// Used for testing purposes and to visualize the tree. 
+// Displays the tree in inorder notation with 'left' being the top
+// and 'right' being the bottom.
+void bTREE::display(std::ostream& outfile) const
 {
-	cout << tree_->data << " ";
+	std::string prefix;
+	if (head == NULL)
+	{
+		outfile << "-" << std::endl;
+	}
+	else
+	{
+		displayLeft(outfile, head->left_, "    ");
+		outfile << "---" << head->data << std::endl;
+		displayRight(outfile, head->right_, "    ");
+	}
 }
 
+
+// Display functions modified from "BinaryTree.h" by Tom Bailey.
+// Used in lab 8.
+void bTREE::displayLeft(std::ostream & outfile, treeNode * subtree, std::string prefix)
+{
+	if (subtree == NULL)
+	{
+		outfile << prefix + "/" << std::endl;
+	}
+	else
+	{
+		displayLeft(outfile, subtree->left_, prefix + "     ");
+		outfile << prefix + "/---" << subtree->data << std::endl;
+		displayRight(outfile, subtree->right_, prefix + "|    ");
+	}
+}
+
+// Modified from code by Tom Bailey.
+void bTREE::displayRight(std::ostream & outfile, treeNode * subtree, std::string prefix)
+{
+	if (subtree == NULL)
+	{
+		outfile << prefix + "\\" << std::endl;
+	}
+	else
+	{
+		displayLeft(outfile, subtree->left_, prefix + "|    ");
+		outfile << prefix + "\\---" << subtree->data << std::endl;
+		displayRight(outfile, subtree->right_, prefix + "     ");
+	}
+}
+
+// inserts value into tree in left-to-right order.
 bool bTREE::insert(string val, int time)
 {
 	return insert(val, time, head);
 }
 
+//returns true the value is in the tree. false otherwise.
 bool bTREE::find(string val)
 {
     return find(val,head);
 }
 
+//prints and inorder traversal of the tree.
 void bTREE::inorder()
 {
-	inorder(head);
+	vector<string> trav;
+	inorder(trav, head);
+	for (int i = 0; i < trav.size(); i++)
+	{
+		cout << trav[i] << " ";
+	}
 }
 
+// Locates the data and returns true if it was located.
 bool bTREE::find(string val, treeNode* tree_)
 {
-    if(tree_->data == val)
+    if(tree_->data == val) //if the head contains the data
     {
         return true;
     }
-    else if(tree_->left_ != nullptr)
+    else if(tree_->left_ != nullptr) // if we can go left
     {
-        if(tree_->right_ != nullptr)
+        if(tree_->right_ != nullptr) //if we can go left
         {
-            return (find(val,tree_->right_) || find(val,tree_->left_));
+            return (find(val,tree_->right_) || find(val,tree_->left_)); //if either have the data then return true
         }
         else
         {
-            return (find(val,tree_->left_));
+            return (find(val,tree_->left_)); // locate the data in the left branch
         }
     }
-    else if(tree_->right_ != nullptr)
+    else if(tree_->right_ != nullptr) //if right has data but left does not
     {
-        return (find(val,tree_->right_));
+        return (find(val,tree_->right_)); // locate the data in the right branch
     }
     else
     {
-        return false;
+        return false; // the end of the tree and the data was not found.
     }
 }
 
+// returns the string describing the data's location.
 string bTREE::locate(string val)
 {
 	return locate(val, head);
 }
 
+//returns string describing shortest path.
 string bTREE::findShortestPath()
 {
 	return findShortestPath(head);
