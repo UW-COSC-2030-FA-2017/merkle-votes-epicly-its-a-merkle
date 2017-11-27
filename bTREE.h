@@ -31,6 +31,13 @@ private:
 	static void displayLeft(std::ostream & outfile,
 		treeNode * subtree, std::string prefix);
 
+	void deleteNode(treeNode* thisNode);
+
+	int dataInserted(treeNode* thisNode);
+
+	bool compareValues(treeNode* lhs, treeNode* rhs);
+
+
 public:
     bTREE();
     ~bTREE();
@@ -51,11 +58,10 @@ public:
 	void display(std::ostream& outfile) const;
 
 
-	/*
-    friend bool operator==(const bTREE& lhs, const bTREE& rhs);
+	
+    friend bool operator ==(const bTREE& lhs, const bTREE& rhs);
     friend bool operator!=(const bTREE& lhs, const bTREE& rhs);
 
     friend std::ostream& operator<<(std::ostream& out, const bTREE& p);
-	*/
-};
 
+};

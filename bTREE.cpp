@@ -9,12 +9,16 @@ bTREE::bTREE()
 
 bTREE::~bTREE()
 {
+	if (head != nullptr)
+	{
+		deleteNode(head);
+	}
 }
 
-// DON'T UNDERSTAND THIS ONE YET
+// NEEDS documentation
 int bTREE::dataInserted()
 {
-	return -1;
+	return dataInserted(head);
 }
 
 //returns size of the tree
@@ -188,9 +192,9 @@ void bTREE::display(std::ostream& outfile) const
 	}
 	else
 	{
-		displayLeft(outfile, head->left_, "    ");
+		displayLeft(outfile, head->right_, "       ");
 		outfile << "---" << head->data << std::endl;
-		displayRight(outfile, head->right_, "    ");
+		displayRight(outfile, head->left_, "       ");
 	}
 }
 
@@ -205,10 +209,68 @@ void bTREE::displayLeft(std::ostream & outfile, treeNode * subtree, std::string 
 	}
 	else
 	{
-		displayLeft(outfile, subtree->left_, prefix + "     ");
+		displayLeft(outfile, subtree->right_, prefix + "        ");
 		outfile << prefix + "/---" << subtree->data << std::endl;
-		displayRight(outfile, subtree->right_, prefix + "|    ");
+		displayRight(outfile, subtree->left_, prefix + "|       ");
 	}
+}
+
+void bTREE::deleteNode(treeNode * thisNode)
+{
+	if (thisNode->left_ != nullptr)
+	{
+		deleteNode(thisNode->left_);
+	}
+	if (thisNode->right_ != nullptr)
+	{
+		deleteNode(thisNode->right_);
+	}
+	delete thisNode;
+}
+
+int bTREE::dataInserted(treeNode * thisNode)
+{
+	if (thisNode == nullptr)
+	{
+		return 0;
+	}
+	else if (thisNode->left_ != nullptr)
+	{
+		if (thisNode->right_ != nullptr)
+		{
+			return (dataInserted(thisNode->left_) + dataInserted(thisNode->right_));
+		}
+		return dataInserted(thisNode->left_);
+	}
+	else if (thisNode->right_ != nullptr)
+	{
+		return dataInserted(thisNode->right_);
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+bool bTREE::compareValues(treeNode * lhs, treeNode * rhs)
+{
+	if (lhs == nullptr && rhs == nullptr)
+	{
+		return true;
+	}
+	else if ((lhs == nullptr && rhs != nullptr) || (rhs == nullptr && lhs != nullptr))
+	{
+		return false;
+	}
+	else if (lhs->data != rhs->data || rhs->time != lhs->time)
+	{
+		return false;
+	}
+	else
+	{
+		return (compareValues(lhs->right_, rhs->right_) && compareValues(lhs->left_, rhs->left_));
+	}
+
 }
 
 // Modified from code by Tom Bailey.
@@ -220,9 +282,9 @@ void bTREE::displayRight(std::ostream & outfile, treeNode * subtree, std::string
 	}
 	else
 	{
-		displayLeft(outfile, subtree->left_, prefix + "|    ");
+		displayLeft(outfile, subtree->right_, prefix + "|       ");
 		outfile << prefix + "\\---" << subtree->data << std::endl;
-		displayRight(outfile, subtree->right_, prefix + "     ");
+		displayRight(outfile, subtree->left_, prefix + "        ");
 	}
 }
 
@@ -252,29 +314,36 @@ void bTREE::inorder()
 // Locates the data and returns true if it was located.
 bool bTREE::find(string val, treeNode* tree_)
 {
-    if(tree_->data == val) //if the head contains the data
-    {
-        return true;
-    }
-    else if(tree_->left_ != nullptr) // if we can go left
-    {
-        if(tree_->right_ != nullptr) //if we can go left
-        {
-            return (find(val,tree_->right_) || find(val,tree_->left_)); //if either have the data then return true
-        }
-        else
-        {
-            return (find(val,tree_->left_)); // locate the data in the left branch
-        }
-    }
-    else if(tree_->right_ != nullptr) //if right has data but left does not
-    {
-        return (find(val,tree_->right_)); // locate the data in the right branch
-    }
-    else
-    {
-        return false; // the end of the tree and the data was not found.
-    }
+	if (tree_ == nullptr)
+	{
+		return false;
+	}
+	else
+	{
+		if (tree_->data == val) //if the head contains the data
+		{
+			return true;
+		}
+		else if (tree_->left_ != nullptr) // if we can go left
+		{
+			if (tree_->right_ != nullptr) //if we can go left
+			{
+				return (find(val, tree_->right_) || find(val, tree_->left_)); //if either have the data then return true
+			}
+			else
+			{
+				return (find(val, tree_->left_)); // locate the data in the left branch
+			}
+		}
+		else if (tree_->right_ != nullptr) //if right has data but left does not
+		{
+			return (find(val, tree_->right_)); // locate the data in the right branch
+		}
+		else
+		{
+			return false; // the end of the tree and the data was not found.
+		}
+	}
 }
 
 // returns the string describing the data's location.
@@ -289,16 +358,22 @@ string bTREE::findShortestPath()
 	return findShortestPath(head);
 }
 
-/*
-friend bool bTREE::operator ==(const bTREE& lhs, const bTREE& rhs)
+bool operator==(const bTREE & lhs, const bTREE & rhs)
 {
+	bTREE tmp;
+	return tmp.compareValues(lhs.head, rhs.head);
+
+	return false;
 }
 
-friend bool bTREE::operator !=(const bTREE& lhs, const bTREE& rhs)
+bool operator!=(const bTREE & lhs, const bTREE & rhs)
 {
+	bTREE tmp;
+	return !tmp.compareValues(lhs.head, rhs.head);
 }
 
-friend std::ostream& bTREE::operator <<(std::ostream& out, const bTREE& p)
+std::ostream & operator<<(std::ostream & out, const bTREE & p)
 {
+	p.display(out);
+	return out;
 }
-*/
