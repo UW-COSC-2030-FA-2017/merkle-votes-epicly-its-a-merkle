@@ -1,6 +1,5 @@
 #include "bTREE.h"
 
-
 //look at descriptions in pMT.h for guidance on what you might need for these function to actually do
 bTREE::bTREE()
 {
@@ -122,19 +121,20 @@ string bTREE::findShortestPath(treeNode * tree_)
 // Inserts Node at the location of the shortest path.
 // fills every level before moving to the next.
 // Preference for left nodes before right.
-bool bTREE::insert(string val, int time, treeNode* &tree_)
+int bTREE::insert(string val, int time, treeNode* &tree_)
 {
 	treeNode* insertion = new treeNode;
 	insertion->data = val;
 	insertion->time = time;
 	insertion->left_ = nullptr;
 	insertion->right_ = nullptr;
+	insertion->leaf = true;
 
 	// If head is null.
 	if (tree_ == nullptr)
 	{
 		tree_ = insertion;
-		return true;
+		return 1;
 	}
 
 	// parent will move to the location of the parent node which will recieve the child.
@@ -165,17 +165,19 @@ bool bTREE::insert(string val, int time, treeNode* &tree_)
 	{
 		parent->right_ = insertion;
 	}
-	return true;
+	parent->leaf = false;
+	return 1;
 }
 
 // inorder traversal of the tree.
-void bTREE::inorder(vector<string>& traversal, treeNode * tree_)
+void bTREE::inorder(std::ostream& out,vector<string>& traversal, treeNode * tree_) const
 {
 	if (tree_ != nullptr)
 	{
-		inorder(traversal, tree_->left_);
-		traversal.push_back(tree_->data);
-		inorder(traversal, tree_->right_);
+		inorder(out,traversal, tree_->left_);
+		string thisData = tree_->data;
+		traversal.push_back(thisData);
+		inorder(out,traversal, tree_->right_);
 	}
 }
 
@@ -186,7 +188,7 @@ void bTREE::inorder(vector<string>& traversal, treeNode * tree_)
 void bTREE::display(std::ostream& outfile) const
 {
 	std::string prefix;
-	if (head == NULL)
+	if (head == nullptr)
 	{
 		outfile << "-" << std::endl;
 	}
@@ -198,12 +200,69 @@ void bTREE::display(std::ostream& outfile) const
 	}
 }
 
+// Returns true if the tree is empty.
+// false otherwise
+bool bTREE::isEmpty()
+{
+	if (head == nullptr)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+// Deletes the tree except for the root node. Teh root node is reset to null.
+void bTREE::clear()
+{
+	deleteNode(head->left_);
+	deleteNode(head->right_);
+	head = nullptr;
+}
+
+bool bTREE::changeData(string location, string val)
+{
+	treeNode* parent = head;
+	for (int i = 0; i < location.size(); i++)
+	{
+		if (location[i] == '0')
+		{
+			parent = parent->left_;
+		}
+		else if (location[i] == '1')
+		{
+			parent = parent->right_;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	parent->data = val;
+	return true;
+}
+
+// returns the data strored in the head
+// if the head is null, then it returns "No Data."
+string bTREE::getRoot()
+{
+	if (head != nullptr)
+	{
+		return head->data;
+	}
+	else
+	{
+		return "No Data.";
+	}
+}
 
 // Display functions modified from "BinaryTree.h" by Tom Bailey.
 // Used in lab 8.
 void bTREE::displayLeft(std::ostream & outfile, treeNode * subtree, std::string prefix)
 {
-	if (subtree == NULL)
+	if (subtree == nullptr)
 	{
 		outfile << prefix + "/" << std::endl;
 	}
@@ -215,6 +274,7 @@ void bTREE::displayLeft(std::ostream & outfile, treeNode * subtree, std::string 
 	}
 }
 
+// Used by the destructor to do recursion.
 void bTREE::deleteNode(treeNode * thisNode)
 {
 	if (thisNode->left_ != nullptr)
@@ -228,6 +288,7 @@ void bTREE::deleteNode(treeNode * thisNode)
 	delete thisNode;
 }
 
+//Returns the number of leaf nodes in the tree.
 int bTREE::dataInserted(treeNode * thisNode)
 {
 	if (thisNode == nullptr)
@@ -273,6 +334,11 @@ bool bTREE::compareValues(treeNode * lhs, treeNode * rhs)
 
 }
 
+string bTREE::getData(treeNode * node) const
+{
+	return node->data;
+}
+
 // Modified from code by Tom Bailey.
 void bTREE::displayRight(std::ostream & outfile, treeNode * subtree, std::string prefix)
 {
@@ -288,8 +354,46 @@ void bTREE::displayRight(std::ostream & outfile, treeNode * subtree, std::string
 	}
 }
 
+string bTREE::getData(string location) const
+{
+	treeNode* parent = head;
+	for (int i = 0; i < location.size(); i++)
+	{
+		if (location[i] == '0')
+		{
+			parent = parent->left_;
+		}
+		else if (location[i] == '1')
+		{
+			parent = parent->right_;
+		}
+	}
+	if (parent == nullptr)
+	{
+		return "No Data";
+	}
+	return parent->data;
+}
+
+int bTREE::getTime(string location)
+{
+	treeNode* parent = head;
+	for (int i = 0; i < location.size(); i++)
+	{
+		if (location[i] == '0')
+		{
+			parent = parent->left_;
+		}
+		else if (location[i] == '1')
+		{
+			parent = parent->right_;
+		}
+	}
+	return parent->time;
+}
+
 // inserts value into tree in left-to-right order.
-bool bTREE::insert(string val, int time)
+int bTREE::insert(string val, int time)
 {
 	return insert(val, time, head);
 }
@@ -301,13 +405,17 @@ bool bTREE::find(string val)
 }
 
 //prints and inorder traversal of the tree.
-void bTREE::inorder()
+void bTREE::inorder(std::ostream& out) const
 {
 	vector<string> trav;
-	inorder(trav, head);
+	inorder(out,trav, head);
 	for (int i = 0; i < trav.size(); i++)
 	{
-		cout << trav[i] << " ";
+		out << trav[i] << " ";
+		if (i % 5 == 0)
+		{
+			out << std::endl;
+		}
 	}
 }
 
@@ -358,20 +466,25 @@ string bTREE::findShortestPath()
 	return findShortestPath(head);
 }
 
+// returns true if the data in the head node is the same for both trees.
 bool operator==(const bTREE & lhs, const bTREE & rhs)
 {
-	bTREE tmp;
-	return tmp.compareValues(lhs.head, rhs.head);
+	if (lhs.head->data == rhs.head->data)
+	{
+		return true;
+	}
 
 	return false;
 }
 
+// returns the opposite of ==
 bool operator!=(const bTREE & lhs, const bTREE & rhs)
 {
 	bTREE tmp;
 	return !tmp.compareValues(lhs.head, rhs.head);
 }
 
+// Displays the tree using the tee display from lab 8.
 std::ostream & operator<<(std::ostream & out, const bTREE & p)
 {
 	p.display(out);
