@@ -17,6 +17,23 @@ bool readToTree1(true); // Alternates the tree that the input file will be read 
 // return: int version of the same value
 int strToDec(string number);
 
+/**
+* ADDITIONAL INFORMATION:
+*
+* OPERATIONS IT TAKES TO ADD A NODE:
+* insertions: 2 (add old leaf again and add new leaf)
+* recompute hashes: h-1 (where h is the height of the tree)
+* TOTAL: O(h-1 + 2) = O(h+1)
+*
+* OPERATIONS TO DETERMINE IF TWO TREES ARE IDENTICAL
+* O(1) only comparing the heads
+*
+* OPERATIONS TO DETERMINE WHERE TWO TREES DIFFER:
+* O(h) (where h is the height of the shortest tree.)
+* this is because the worst case senerio is that the only difference is one node at the bottom.
+* therefore the algorithm would have to traverse the entire tree.
+*/
+
 int main(int argc, char **argv)
 {
 	cout << "...:::PSUEDO MERKLE TREE BY CHANDLER HAUKAP::..." << endl << endl;
@@ -27,7 +44,7 @@ int main(int argc, char **argv)
 	cout << "Type 'xor' to show the difference between tree one and tree two" << endl;
 	cout << "Type 'end' to end the program." << endl;
 
-	pMT tree1(2);
+	pMT tree1(2); //defaulted to hash two because it is my favorite:)
 	pMT tree2(2);
 
 	while (true)

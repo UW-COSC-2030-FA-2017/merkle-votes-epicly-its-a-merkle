@@ -82,6 +82,7 @@ string pMT::iToS(unsigned long long number)
 	return rtn;
 }
 
+//Helper function to determine which hash to use.
 string pMT::hash(string val)
 {
 	if (selectedHash == 1)
@@ -98,6 +99,7 @@ string pMT::hash(string val)
 	}
 }
 
+//Functionality to change the hash only if the hash has never been used.
 bool pMT::changeHash(int hash)
 {
 	if (myMerkle.isEmpty())
@@ -119,33 +121,38 @@ bool pMT::changeHash(int hash)
 */
 int pMT::insert(string vote, int time)
 {
-	string path = myMerkle.findShortestPath();
+	string path = myMerkle.findShortestPath(); // locates the place where dada will be added
 
-
-	if (path.size() == 0)
+	if (path.size() == 0) // If this is the first element added
 	{
-		myMerkle.insert(vote, time);
+		myMerkle.insert(vote, time); // no hashing needs to be done
 	}
-	else if (path[path.size() - 1] == '0')
+	else if (path[path.size() - 1] == '0') // this will ALWAYS be true because merkle tree nodes have exactly 0 or 2 children
 	{
-		myMerkle.insert(vote, time);
-		path.pop_back();
-		myMerkle.insert(myMerkle.getData(path), myMerkle.getTime(path));
+		myMerkle.insert(vote, time); //insert what we want to insert
+		path.pop_back(); //move back one place in the tree to get information from the parent
+		myMerkle.insert(myMerkle.getData(path), myMerkle.getTime(path)); //re-insert the parent node into the tree. This will place the exact same data as a child of the original.
 		int size = path.size();
 
-		for (int i = size; i >= 0; i--)
+		for (int i = size; i >= 0; i--) //Now acend up the tree and change every node along the way
 		{
-			string right = path + '1';
+			string right = path + '1'; // need the locations of the children to get their data
 			string left = path + '0';
-			myMerkle.changeData(path, hash(myMerkle.getData(right) + myMerkle.getData(left)));
+			myMerkle.changeData(path, hash(myMerkle.getData(right) + myMerkle.getData(left))); //Modify each parent by re-hashing them using their children
 			if (path.size() > 0)
 			{
-				path.pop_back();
+				path.pop_back(); //move up the tree until we hit the top.
 			}
 		}
 	}
 
 	return 1;
+	/**
+	* OPERATIONS IT TAKES TO ADD A NODE:
+	* insertions: 2 (add old leaf again and add new leaf)
+	* recompute hashes: h-1 (where h is the height of the tree)
+	* TOTAL: O(h-1 + 2) = O(h+1)
+	*/
 }
 
 /**
@@ -273,7 +280,7 @@ string pMT::hash_2(string key)
 	* this function has the same premise as the last one, but it then multiples
 	* the sum by 42 to make it larger. This hash was the first one to cause an overflow.
 	* On my first iteration I used long long data type instead of unsigned long long
-	* and thsi caused my results to be negative and outside of the range of my iToS function.
+	* and it caused my results to be negative and outside of the range of my iToS function.
 	* I solved this by making my data type unsigned long long and it immediately worked.
 	* I also started the sum off at a six digit prime to seee if it would increase randomness.
 	*/
@@ -346,41 +353,42 @@ bool operator!=(const pMT & lhs, const pMT & rhs)
 */
 pMT operator^(const pMT & lhs, const pMT & rhs)
 {
-	pMT* difference = new pMT(1);
+	pMT* difference = new pMT(1); //tree to store the difference
 	string path;
 
-	if (rhs != lhs)
+	if (rhs != lhs) //if the trees are not the same
 	{
 		while (true)
 		{
-			if (rhs.getData(path + '0') != lhs.getData(path + '0'))
+			if (rhs.getData(path + '0') != lhs.getData(path + '0')) // if the left path if different
 			{
-				if (rhs.getData(path + '1') != lhs.getData(path + '1'))
+				if (rhs.getData(path + '1') != lhs.getData(path + '1')) //if the right path is diferent
 				{
-					difference->myMerkle.insert(rhs.getData(path), 1);
-					string right(path + '1'), left(path + '0');
-					difference->myMerkle.insert(rhs.getData(left), 1);
-					difference->myMerkle.insert(rhs.getData(right), 1);
-					difference->myMerkle.inorder(cout);
-					break;
+					difference->myMerkle.insert(rhs.getData(path), 1); //This must be where the tree diverges. therefore add this to the new tree
+					string right(path + '1'), left(path + '0'); //My algorithm also adds the children to give some additional context
+					difference->myMerkle.insert(rhs.getData(left), 1); //add the children of the different node.
+					difference->myMerkle.insert(rhs.getData(right), 1); 
+					// This will produce a tree with three nodes that are all different than the first tree.
+					// I could continue to add the rest of the different nodes, but this gives enough context to locate the offending branches.
+					break; // satisfies break conditions
 				}
-				else
+				else //if the left is different but not the right
 				{
-					path = path + '0';
+					path = path + '0'; // move down the path that is different (toward the falsified node)
 				}
 			}
-			else if (rhs.getData(path + '1') != lhs.getData(path + '1'))
+			else if (rhs.getData(path + '1') != lhs.getData(path + '1')) // if the left is the same but the right is different
 			{
-				path += '1';
+				path += '1'; // move down the path that is different (toward the falsified node)
 			}
 			else
 			{
-				difference->myMerkle.insert(rhs.getData(path), 1);
+				difference->myMerkle.insert(rhs.getData(path), 1); //If the only node that is different is one data node, then it is all that needs to be added to the tree
 				break;
 			}
 		}
 	}
-	return *difference;
+	return *difference; // return the difference
 }
 
 /**

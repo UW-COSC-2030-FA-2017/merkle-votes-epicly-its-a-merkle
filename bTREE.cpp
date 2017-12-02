@@ -14,7 +14,7 @@ bTREE::~bTREE()
 	}
 }
 
-// NEEDS documentation
+// returns the number of data nodes(leaves) in the tree.
 int bTREE::dataInserted()
 {
 	return dataInserted(head);
